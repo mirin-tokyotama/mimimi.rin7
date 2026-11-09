@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>楽天アフィリンク作成</title>
+<style>
+  :root {
+    --bg: #faf7f5; --card: #ffffff; --text: #222; --muted: #6b6b6b;
+    --line: #e6e0dc; --accent: #bf0000; --accent-soft: #fdeaea; --ok: #1a7f37;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161414; --card: #221f1f; --text: #eee; --muted: #a9a3a0;
+      --line: #3a3434; --accent: #ff5a5a; --accent-soft: #3a2222; --ok: #4ac26b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+    line-height: 1.6;
+  }
+  main { max-width: 640px; margin: 0 auto; padding: 20px 16px 60px; }
+  h1 { font-size: 1.3rem; margin: 0 0 4px; }
+  h2 { font-size: 1rem; margin: 0 0 10px; }
+  .sub { color: var(--muted); font-size: .85rem; margin: 0 0 18px; }
+  section {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px; margin-bottom: 14px;
+  }
+  label { display: block; font-size: .85rem; color: var(--muted); margin: 8px 0 4px; }
+  input, textarea {
+    width: 100%; font: inherit; color: var(--text); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px;
+  }
+  textarea { min-height: 96px; resize: vertical; }
+  button, .btn {
+    font: inherit; font-size: .9rem; border: 0; border-radius: 8px; cursor: pointer;
+    padding: 9px 14px; background: var(--accent); color: #fff; text-decoration: none;
+    display: inline-block;
+  }
+  button.ghost { background: var(--accent-soft); color: var(--accent); }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+  .badge {
+    display: inline-block; background: var(--accent-soft); color: var(--accent);
+    border-radius: 999px; padding: 4px 12px; font-weight: 600;
+  }
+  .today { background: var(--accent); color: #fff; }
+  .out {
+    word-break: break-all; font-size: .85rem; background: var(--bg);
+    border: 1px dashed var(--line); border-radius: 8px; padding: 8px 10px; margin-top: 8px;
+    min-height: 2.4em;
+  }
+  .preset { border-top: 1px solid var(--line); padding: 10px 0; }
+  .preset:first-of-type { border-top: 0; }
+  .preset b { display: block; font-size: .95rem; }
+  .muted { color: var(--muted); font-size: .8rem; }
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+    background: var(--ok); color: #fff; padding: 8px 16px; border-radius: 999px;
+    opacity: 0; transition: opacity .2s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<main>
+  <h1>楽天アフィリンク作成</h1>
+  <p class="sub">5と0のつく日用。アフィリエイトIDを一度入れれば、あとはボタンを押すだけ。</p>
+
+  <section>
+    <h2>今日の状態</h2>
+    <div id="dayInfo"></div>
+  </section>
+
+  <section>
+    <h2>① アフィリエイトID（最初の1回だけ）</h2>
+    <input id="affId" placeholder="例: 1a2b3c4d.5e6f7a8b.1a2b3c4d.5e6f7a8b" autocomplete="off">
+    <p class="muted">楽天アフィリエイト管理画面 → 「楽天ウェブサービス」や作成済みリンクの <code>hgc/</code> の直後の部分。このブラウザにだけ保存されます。</p>
+  </section>
+
+  <section>
+    <h2>② よく使うリンク（ワンタップでコピー）</h2>
+    <div id="presets"></div>
+    <details>
+      <summary class="muted">リンクを追加する</summary>
+      <label for="newName">名前</label>
+      <input id="newName" placeholder="例: 楽天ブックス">
+      <label for="newUrl">楽天のURL</label>
+      <input id="newUrl" placeholder="https://...">
+      <div class="row"><button id="addPreset">追加</button></div>
+    </details>
+  </section>
+
+  <section>
+    <h2>③ 任意の楽天URLを変換</h2>
+    <input id="anyUrl" placeholder="商品ページなどのURLを貼り付け">
+    <div class="out" id="anyOut"></div>
+    <div class="row"><button id="copyAny">コピー</button></div>
+  </section>
+
+  <section>
+    <h2>④ 投稿文テンプレ</h2>
+    <p class="muted"><code>{link}</code> がエントリーページのアフィリンク、<code>{date}</code> が今日の日付に置き換わります。</p>
+    <textarea id="tpl"></textarea>
+    <div class="out" id="tplOut" style="white-space:pre-wrap"></div>
+    <div class="row"><button id="copyTpl">投稿文をコピー</button><button class="ghost" id="resetTpl">テンプレを初期化</button></div>
+  </section>
+
+  <section>
+    <h2>⑤ ブックマークレット（いちばんラク）</h2>
+    <p class="muted">下のボタンをブックマークバーにドラッグ（スマホはURLをコピーしてブックマークのURL欄に貼り付け）。楽天のどのページでもそれを押せば、そのページのアフィリンクがコピーされます。</p>
+    <div class="row">
+      <a class="btn" id="bm" href="#">楽天アフィ</a>
+      <button class="ghost" id="copyBm">ブックマークレットのURLをコピー</button>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast">コピーしました</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+
+const ENTRY_URL = 'https://event.rakuten.co.jp/campaign/card/pointday/';
+const DEFAULT_PRESETS = [
+  { name: '5と0のつく日 エントリーページ', url: ENTRY_URL },
+  { name: '楽天市場トップ', url: 'https://www.rakuten.co.jp/' },
+];
+const DEFAULT_TPL =
+`＼今日{date}は楽天【5と0のつく日】／
+楽天カード利用でポイントアップ✨
+エントリー忘れずに👇
+{link}
+
+#PR #楽天 #5と0のつく日`;
+
+let presets = store.get('presets', DEFAULT_PRESETS);
+
+function affId() { return $('affId').value.trim(); }
+
+function toAff(url) {
+  url = (url || '').trim();
+  if (!url) return '';
+  if (/^https?:\/\/hb\.afl\.rakuten\.co\.jp\//.test(url)) return url; // already affiliate
+  if (!/^https?:\/\/([^/]+\.)?rakuten\.co\.jp\//.test(url)) return '※楽天のURLではありません';
+  const id = affId();
+  if (!id) return '※先にアフィリエイトIDを入れてください';
+  const enc = encodeURIComponent(url);
+  return `https://hb.afl.rakuten.co.jp/hgc/${id}/?pc=${enc}&m=${enc}`;
+}
+
+function isLink(s) { return /^https:/.test(s); }
+
+let toastTimer;
+async function copy(text) {
+  if (!isLink(text) && !text.includes('https://')) { alert(text || 'コピーする内容がありません'); return; }
+  try { await navigator.clipboard.writeText(text); }
+  catch {
+    const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t);
+    t.select(); document.execCommand('copy'); t.remove();
+  }
+  $('toast').classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').classList.remove('show'), 1200);
+}
+
+function isPointDay(d) { return d.getDate() % 5 === 0; }
+function fmt(d) { return `${d.getMonth() + 1}/${d.getDate()}`; }
+
+function renderDay() {
+  const now = new Date();
+  const next = new Date(now);
+  if (isPointDay(now)) next.setDate(next.getDate() + 1);
+  while (!isPointDay(next)) next.setDate(next.getDate() + 1);
+  const days = Math.round((new Date(next.getFullYear(), next.getMonth(), next.getDate()) -
+                           new Date(now.getFullYear(), now.getMonth(), now.getDate())) / 864e5);
+  $('dayInfo').innerHTML = isPointDay(now)
+    ? `<span class="badge today">今日 ${fmt(now)} は5と0のつく日！</span> <span class="muted">次は ${fmt(next)}</span>`
+    : `<span class="badge">次の5と0のつく日：${fmt(next)}（あと${days}日）</span>`;
+}
+
+function renderPresets() {
+  const box = $('presets');
+  box.innerHTML = '';
+  presets.forEach((p, i) => {
+    const div = document.createElement('div');
+    div.className = 'preset';
+    const link = toAff(p.url);
+    div.innerHTML = `<b></b><div class="out"></div>
+      <div class="row"><button>コピー</button><button class="ghost">削除</button></div>`;
+    div.querySelector('b').textContent = p.name;
+    div.querySelector('.out').textContent = link;
+    const [c, del] = div.querySelectorAll('button');
+    c.onclick = () => copy(link);
+    del.onclick = () => {
+      if (!confirm(`「${p.name}」を削除しますか？`)) return;
+      presets.splice(i, 1); store.set('presets', presets); renderAll();
+    };
+    box.appendChild(div);
+  });
+}
+
+function renderAny() { $('anyOut').textContent = toAff($('anyUrl').value); }
+
+function tplText() {
+  const link = toAff(ENTRY_URL);
+  return $('tpl').value.replaceAll('{link}', link).replaceAll('{date}', fmt(new Date()));
+}
+function renderTpl() { $('tplOut').textContent = tplText(); }
+
+function bookmarklet() {
+  const id = affId();
+  if (!id) return '';
+  const code = `(function(){var u=location.href;if(!/rakuten\\.co\\.jp/.test(location.hostname)){alert('楽天のページで使ってね');return;}` +
+    `var e=encodeURIComponent(u);var a='https://hb.afl.rakuten.co.jp/hgc/${id}/?pc='+e+'&m='+e;` +
+    `if(navigator.clipboard){navigator.clipboard.writeText(a).then(function(){alert('アフィリンクをコピーしました')},function(){prompt('コピーしてね',a)})}else{prompt('コピーしてね',a)}})()`;
+  return 'javascript:' + code;
+}
+function renderBm() {
+  const b = bookmarklet();
+  $('bm').href = b || '#';
+  $('bm').style.opacity = b ? 1 : .4;
+}
+
+function renderAll() { renderDay(); renderPresets(); renderAny(); renderTpl(); renderBm(); }
+
+// wiring
+$('affId').value = store.get('affId', '');
+$('affId').addEventListener('input', () => { store.set('affId', affId()); renderAll(); });
+$('anyUrl').addEventListener('input', renderAny);
+$('copyAny').onclick = () => copy($('anyOut').textContent);
+$('tpl').value = store.get('tpl', DEFAULT_TPL);
+$('tpl').addEventListener('input', () => { store.set('tpl', $('tpl').value); renderTpl(); });
+$('copyTpl').onclick = () => copy(tplText());
+$('resetTpl').onclick = () => { $('tpl').value = DEFAULT_TPL; store.set('tpl', DEFAULT_TPL); renderTpl(); };
+$('addPreset').onclick = () => {
+  const name = $('newName').value.trim(), url = $('newUrl').value.trim();
+  if (!name || !url) { alert('名前とURLを入れてください'); return; }
+  presets.push({ name, url }); store.set('presets', presets);
+  $('newName').value = ''; $('newUrl').value = ''; renderAll();
+};
+$('bm').onclick = (e) => { e.preventDefault(); alert(affId() ? 'このボタンをブックマークバーにドラッグしてください' : '先にアフィリエイトIDを入れてください'); };
+$('copyBm').onclick = () => { const b = bookmarklet(); b ? copy(b) : alert('先にアフィリエイトIDを入れてください'); };
+
+renderAll();
+</script>
+</body>
+</html>
