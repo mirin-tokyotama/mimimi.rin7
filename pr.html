@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PR依頼の返信</title>
+<link rel="icon" href="icon-180.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="theme-color" content="#bf0000">
+<style>
+  :root {
+    --bg: #faf7f5; --card: #ffffff; --text: #222; --muted: #6b6b6b;
+    --line: #e6e0dc; --accent: #bf0000; --accent-soft: #fdeaea; --ok: #1a7f37;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161414; --card: #221f1f; --text: #eee; --muted: #a9a3a0;
+      --line: #3a3434; --accent: #ff5a5a; --accent-soft: #3a2222; --ok: #4ac26b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+    line-height: 1.6;
+  }
+  main { max-width: 640px; margin: 0 auto; padding: 20px 16px 60px; }
+  h1 { font-size: 1.3rem; margin: 0 0 4px; }
+  h2 { font-size: 1rem; margin: 0 0 10px; }
+  .sub { color: var(--muted); font-size: .85rem; margin: 0 0 18px; }
+  .nav { font-size: .85rem; margin: 0 0 12px; }
+  .nav a { color: var(--accent); }
+  section {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px; margin-bottom: 14px;
+  }
+  label { display: block; font-size: .85rem; color: var(--muted); margin: 10px 0 4px; }
+  input, textarea, select {
+    width: 100%; font: inherit; color: var(--text); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px;
+  }
+  textarea { min-height: 260px; resize: vertical; font-size: .9rem; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+  @media (max-width: 420px) { .grid { grid-template-columns: 1fr; } }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tabs button { background: var(--accent-soft); color: var(--accent); }
+  .tabs button.on { background: var(--accent); color: #fff; }
+  button {
+    font: inherit; font-size: .9rem; border: 0; border-radius: 8px; cursor: pointer;
+    padding: 9px 14px; background: var(--accent); color: #fff;
+  }
+  button.ghost { background: var(--accent-soft); color: var(--accent); }
+  button.big { width: 100%; padding: 13px; font-size: 1rem; font-weight: 600; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+  .check { display: flex; gap: 8px; align-items: center; margin-top: 10px; font-size: .9rem; }
+  .check input { width: auto; }
+  .out {
+    white-space: pre-wrap; word-break: break-word; font-size: .9rem; background: var(--bg);
+    border: 1px dashed var(--line); border-radius: 8px; padding: 10px 12px; margin: 10px 0;
+  }
+  .muted { color: var(--muted); font-size: .8rem; }
+  code { font-size: .8rem; }
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+    background: var(--ok); color: #fff; padding: 8px 16px; border-radius: 999px;
+    opacity: 0; transition: opacity .2s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<main>
+  <p class="nav"><a href="./">← 楽天アフィリンク作成</a></p>
+  <h1>PR依頼の返信</h1>
+  <p class="sub">イベント名と日付を入れて、コピーして送るだけ。金額などは次回も覚えています。</p>
+
+  <section>
+    <h2>① 返信のパターン</h2>
+    <div class="tabs" id="tabs"></div>
+  </section>
+
+  <section>
+    <h2>② 今回の内容</h2>
+    <label for="event">イベント名</label>
+    <input id="event" placeholder="例: 愛の泉みんなのラグビー&健康フェスタ">
+    <div class="grid">
+      <div>
+        <label for="eventDate">開催日</label>
+        <input id="eventDate" type="date">
+      </div>
+      <div>
+        <label for="postDate">投稿日（自動で前日）</label>
+        <input id="postDate" type="date">
+      </div>
+      <div>
+        <label for="deadline">返信の締め切り（自動で2日前）</label>
+        <input id="deadline" type="date">
+      </div>
+      <div>
+        <label for="deadlineTime">締め切り時刻</label>
+        <input id="deadlineTime" placeholder="例: 12時">
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>③ 料金（次回も覚えています）</h2>
+    <div class="grid">
+      <div>
+        <label for="price1">ストーリーズ1回（円）</label>
+        <input id="price1" inputmode="numeric">
+      </div>
+      <div>
+        <label for="price2">ストーリーズ2回（円）</label>
+        <input id="price2" inputmode="numeric">
+      </div>
+    </div>
+    <label class="check"><input type="checkbox" id="use2"> 2回プランも案内する</label>
+  </section>
+
+  <section>
+    <h2>④ 返信文</h2>
+    <div class="out" id="out"></div>
+    <button class="big" id="copy">返信文をコピー</button>
+    <details style="margin-top:14px">
+      <summary class="muted">文面を自分好みに直す</summary>
+      <p class="muted">
+        <code>{イベント名}</code> <code>{料金}</code> <code>{投稿日}</code> <code>{締切}</code> がそれぞれ置き換わります。直した文面はこのパターンに保存されます。
+      </p>
+      <textarea id="tpl"></textarea>
+      <div class="row"><button class="ghost" id="reset">このパターンを初期の文面に戻す</button></div>
+    </details>
+  </section>
+</main>
+<div class="toast" id="toast">コピーしました</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+
+const PATTERNS = [
+  {
+    key: 'storyOnly',
+    name: '記事は作成済み→ストーリーズ有償',
+    tpl:
+`ご連絡ありがとうございます。
+「{イベント名}」のご案内、拝見しました。
+
+あいにく今週末のイベント記事は制作を終えてしまっており、記事への追加は難しい状況です。申し訳ありません。
+
+代わりに、Instagramストーリーズでのご紹介でしたら対応可能です。
+恐れ入りますが、PR投稿として有償でのお受けとなります。
+
+{料金}
+・投稿日：{投稿日}予定
+※投稿には「PR」表記が入ります
+※お支払いは投稿前の事前振込でお願いしております
+
+開催日が近いため、ご希望の場合は{締切}までにご返信ください。
+あわせて、使用可能な画像（チラシ等）があればお送りください。
+
+ご検討のほど、よろしくお願いいたします。`,
+  },
+  {
+    key: 'storyPaid',
+    name: 'ストーリーズ有償（記事の話なし）',
+    tpl:
+`ご連絡ありがとうございます。
+「{イベント名}」のご案内、拝見しました。
+
+PR投稿のご依頼は、有償でお受けしております。
+Instagramストーリーズでのご紹介の場合、下記の料金となります。
+
+{料金}
+・投稿日：{投稿日}予定
+※投稿には「PR」表記が入ります
+※お支払いは投稿前の事前振込でお願いしております
+
+ご希望の場合は{締切}までにご返信ください。
+あわせて、使用可能な画像（チラシ等）があればお送りください。
+
+ご検討のほど、よろしくお願いいたします。`,
+  },
+  {
+    key: 'decline',
+    name: 'お断り',
+    tpl:
+`ご連絡ありがとうございます。
+「{イベント名}」のご案内、拝見しました。
+
+せっかくお声がけいただいたのですが、今回はご紹介を見送らせていただきます。
+申し訳ありません。
+
+イベントのご盛況をお祈りしております。`,
+  },
+];
+
+const DEFAULTS = { price1: '5000', price2: '8000', use2: false, deadlineTime: '12時', pattern: 'storyOnly' };
+let pattern = store.get('pattern', DEFAULTS.pattern);
+if (!PATTERNS.some((p) => p.key === pattern)) pattern = DEFAULTS.pattern;
+
+const WD = ['日', '月', '火', '水', '木', '金', '土'];
+function parseDate(v) { if (!v) return null; const [y, m, d] = v.split('-').map(Number); return new Date(y, m - 1, d); }
+function toInput(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+function jp(v) { const d = parseDate(v); return d ? `${d.getMonth() + 1}/${d.getDate()}（${WD[d.getDay()]}）` : '〇/〇（〇）'; }
+function yen(v) { const n = Number(String(v).replace(/[^\d]/g, '')); return n ? n.toLocaleString('ja-JP') + '円（税込）' : '〇,〇〇〇円（税込）'; }
+function shift(v, days) { const d = parseDate(v); if (!d) return ''; d.setDate(d.getDate() + days); return toInput(d); }
+
+function currentTpl() {
+  const p = PATTERNS.find((x) => x.key === pattern);
+  return store.get('tpl_' + pattern, p.tpl);
+}
+
+function priceLines() {
+  const lines = [`・ストーリーズ1回：${yen($('price1').value)}`];
+  if ($('use2').checked) lines.push(`・ストーリーズ2回（事前告知＋前日リマインド）：${yen($('price2').value)}`);
+  return lines.join('\n');
+}
+
+function text() {
+  const t = $('deadlineTime').value.trim();
+  return $('tpl').value
+    .replaceAll('{イベント名}', $('event').value.trim() || '〇〇〇〇')
+    .replaceAll('{料金}', priceLines())
+    .replaceAll('{投稿日}', jp($('postDate').value))
+    .replaceAll('{締切}', jp($('deadline').value) + t);
+}
+
+function render() { $('out').textContent = text(); }
+
+function renderTabs() {
+  const box = $('tabs');
+  box.innerHTML = '';
+  PATTERNS.forEach((p) => {
+    const b = document.createElement('button');
+    b.textContent = p.name;
+    if (p.key === pattern) b.className = 'on';
+    b.onclick = () => { pattern = p.key; store.set('pattern', pattern); $('tpl').value = currentTpl(); renderTabs(); render(); };
+    box.appendChild(b);
+  });
+}
+
+let toastTimer;
+async function copy(s) {
+  try { await navigator.clipboard.writeText(s); }
+  catch {
+    const t = document.createElement('textarea'); t.value = s; document.body.appendChild(t);
+    t.select(); document.execCommand('copy'); t.remove();
+  }
+  $('toast').classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').classList.remove('show'), 1200);
+}
+
+// 保存する設定
+['price1', 'price2', 'deadlineTime'].forEach((id) => {
+  $(id).value = store.get(id, DEFAULTS[id]);
+  $(id).addEventListener('input', () => { store.set(id, $(id).value); render(); });
+});
+$('use2').checked = store.get('use2', DEFAULTS.use2);
+$('use2').addEventListener('change', () => { store.set('use2', $('use2').checked); render(); });
+
+// 毎回入れる内容
+$('event').addEventListener('input', render);
+$('eventDate').addEventListener('input', () => {
+  $('postDate').value = shift($('eventDate').value, -1);
+  $('deadline').value = shift($('eventDate').value, -2);
+  render();
+});
+$('postDate').addEventListener('input', render);
+$('deadline').addEventListener('input', render);
+
+$('tpl').addEventListener('input', () => { store.set('tpl_' + pattern, $('tpl').value); render(); });
+$('reset').onclick = () => {
+  const p = PATTERNS.find((x) => x.key === pattern);
+  $('tpl').value = p.tpl; store.set('tpl_' + pattern, p.tpl); render();
+};
+$('copy').onclick = () => copy(text());
+
+$('tpl').value = currentTpl();
+renderTabs();
+render();
+</script>
+</body>
+</html>
