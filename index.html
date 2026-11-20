@@ -237,8 +237,8 @@ function renderAll() { renderDay(); renderPresets(); renderAny(); renderTpl(); r
 // wiring
 $('affId').value = store.get('affId', '');
 $('affId').addEventListener('input', () => {
-  // アフィリンクを丸ごと貼られたら hgc/ の後ろのIDだけ取り出す
-  const m = $('affId').value.match(/hgc\/([0-9a-f]{8}\.[0-9a-f]{8}\.[0-9a-f]{8}\.[0-9a-f]{8})/i);
+  // アフィリンクを丸ごと貼られたら hgc/ か ichiba/ の後ろのIDだけ取り出す
+  const m = $('affId').value.match(/(?:hgc|ichiba)\/([0-9a-f]{8}\.[0-9a-f]{8}\.[0-9a-f]{8}\.[0-9a-f]{8})/i);
   if (m) $('affId').value = m[1];
   store.set('affId', affId()); renderAll();
 });
